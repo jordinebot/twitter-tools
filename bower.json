@@ -1,0 +1,16 @@
+{
+  "name": "twitter-tools",
+  "version": "0.0.1",
+  "homepage": "https://github.com/jordinebot/twitter-tools",
+  "authors": [
+    "Jordi Nebot <llengot@gmail.com>"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
