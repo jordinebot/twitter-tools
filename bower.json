@@ -9,8 +9,16 @@
   "ignore": [
     "**/.*",
     "node_modules",
-    "bower_components",
+    "app/components",
     "test",
-    "tests"
-  ]
+    "tests",
+    "bower_components"
+  ],
+  "moduleType": [
+    "node"
+  ],
+  "dependencies": {
+    "karma": "~0.2.2",
+    "angular": "~1.2.18"
+  }
 }
