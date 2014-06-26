@@ -1,13 +1,18 @@
 <!doctype html>
-<html lang="en" ng-app>
+<html lang="en" ng-app="twitterToolsApp">
 <head>
   <meta charset="utf-8">
   <title>Twitter Tools</title>
   <script src="components/angular/angular.js"></script>
+  <script src="components/oauth.io/dist/oauth.js"></script>
+  <script src="js/classes.js"></script>
+  <script src="js/controllers.js"></script>
 </head>
-<body>
+<body ng-controller="mainController">
 
   <p>Nothing here {{'yet' + '!'}}</p>
+
+  <p>{{ msg[0] }}</p>
 
 </body>
 </html>
