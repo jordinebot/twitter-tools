@@ -1,30 +1,29 @@
-var TwitterInterface;
+var TwitterClientInterface;
 
-TwitterInterface = (function() {
-  function TwitterInterface() {
-    this.api = 'https://api.twitter.com/1.1/';
+TwitterClientInterface = (function() {
+  function TwitterClientInterface() {
+    this.api = 'api.php/?action=';
     this.keys = {
-      oauth: 'QB3YKlQOuN5vYnXz-K2EVV9nSBw'
+      oauth: ''
     };
-    this.init();
   }
 
-  TwitterInterface.prototype.init = function() {
-    OAuth.initialize(this.keys.oauth);
-    return OAuth.popup('twitter', (function(_this) {
-      return function(error, success) {
-        if ((success != null) && (error == null)) {
-          _this.twitter = success;
-          _this.keys.token = _this.twitter.oauth_token;
-          return _this.twitter.get('/me').done(function(res) {
-            console.log(res);
-            return console.log("Hello, " + res.name);
-          });
-        }
-      };
-    })(this));
+  TwitterClientInterface.prototype.setAjax = function(ajax) {
+    return this.ajax = ajax;
   };
 
-  return TwitterInterface;
+  TwitterClientInterface.prototype.authenticate = function() {
+    if (this.ajax != null) {
+      return this.ajax.get(this.api + 'authenticate').success((function(_this) {
+        return function(data, status, headers, config) {
+          return _this.keys.token = data.token;
+        };
+      })(this));
+    } else {
+      return false;
+    }
+  };
+
+  return TwitterClientInterface;
 
 })();

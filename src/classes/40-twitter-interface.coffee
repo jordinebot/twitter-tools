@@ -1,22 +1,25 @@
-class TwitterInterface
+class TwitterClientInterface
   constructor: () ->
-    @api = 'https://api.twitter.com/1.1/'
+    @api = 'api.php/?action='
 
     @keys =
-      oauth : 'QB3YKlQOuN5vYnXz-K2EVV9nSBw'
+      oauth : ''
 
-    @.init()
+  setAjax: (ajax) ->
+    @ajax = ajax
+
+  authenticate: () -> # https://dev.twitter.com/docs/auth/application-only-auth
+    if @ajax?
+
+      # Application-only authentication
+      @ajax.get @api + 'authenticate'
+           .success (data, status, headers, config) =>
+              @keys.token = data.token
+
+    else
+      false
 
 
-  init: () ->
 
-    OAuth.initialize @keys.oauth
-    OAuth.popup 'twitter', (error, success) =>
-      if success? and not error?
-        @twitter = success
-        @keys.token = @twitter.oauth_token
-        @twitter.get('/me').done (res) =>
-          console.log res
-          console.log "Hello, " + res.name
 
 

@@ -1,10 +1,12 @@
-var tw, twitterToolsApp;
+var twitterToolsApp;
 
 twitterToolsApp = angular.module('twitterToolsApp', []);
 
-tw = new TwitterInterface();
-
-twitterToolsApp.controller('mainController', function($scope) {
+twitterToolsApp.controller('mainController', function($scope, $http) {
+  var twitterInterface;
+  twitterInterface = new TwitterClientInterface();
+  twitterInterface.setAjax($http);
+  twitterInterface.authenticate();
   $scope.msg = ['hola'];
   return true;
 });
