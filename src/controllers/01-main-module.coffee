@@ -1,2 +1,1 @@
-twitterToolsApp = angular.module('twitterToolsApp', []);
-
+twitterToolsApp = angular.module 'twitterToolsApp', []

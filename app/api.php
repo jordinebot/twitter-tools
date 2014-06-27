@@ -1,6 +1,6 @@
 <?php
 
-  error_reporting(E_ALL);
+  error_reporting(E_ERROR);
   ini_set('display_errors', 1);
 
   $serverInterface = new TwitterServerInterface();
@@ -13,9 +13,12 @@
         echo json_encode( array( 'token' => $serverInterface->authenticate() ) );
         break;
 
-      default:
+      case 'user':
         header( 'Content-type: application/json' );
-        echo json_encode( array( 'response' => false ) );
+        print_r( $serverInterface->user() );
+        break;
+
+      default:
         break;
     }
 
@@ -24,14 +27,24 @@
 
   class API {
 
+    /*
+         █████╗  ██████╗  ██╗
+        ██╔══██╗ ██╔══██╗ ██║
+        ███████║ ██████╔╝ ██║
+        ██╔══██║ ██╔═══╝  ██║
+        ██║  ██║ ██║      ██║
+        ╚═╝  ╚═╝ ╚═╝      ╚═╝
+     */
+
     public static function call( $url, $options = null, $debug = false ) {
 
       $ch = curl_init( $url );
 
       // Configuring curl options
-      if ( !isset( $options ) ) {
+      if ( is_null( $options ) ) {
         $options = array(
-          CURLOPT_RETURNTRANSFER => true,
+          CURLOPT_POST => false,
+          CURLOPT_RETURNTRANSFER => true
         );
       }
 
@@ -50,6 +63,15 @@
   }
 
   class TwitterServerInterface {
+
+    /*
+        ████████╗██╗    ██╗██╗████████╗████████╗███████╗██████╗     ███████╗██████╗ ██╗   ██╗
+        ╚══██╔══╝██║    ██║██║╚══██╔══╝╚══██╔══╝██╔════╝██╔══██╗    ██╔════╝██╔══██╗██║   ██║
+           ██║   ██║ █╗ ██║██║   ██║      ██║   █████╗  ██████╔╝    ███████╗██████╔╝██║   ██║
+           ██║   ██║███╗██║██║   ██║      ██║   ██╔══╝  ██╔══██╗    ╚════██║██╔══██╗╚██╗ ██╔╝
+           ██║   ╚███╔███╔╝██║   ██║      ██║   ███████╗██║  ██║    ███████║██║  ██║ ╚████╔╝
+           ╚═╝    ╚══╝╚══╝ ╚═╝   ╚═╝      ╚═╝   ╚══════╝╚═╝  ╚═╝    ╚══════╝╚═╝  ╚═╝  ╚═══╝
+     */
 
     /*
 
@@ -74,6 +96,93 @@
 
     private $accessToken = '';
 
+    private static $salt = array(
+      '+_YMK*o)(<gq$A$I%$O!lItb&G7rgNfV&#<!4]F-7zoH>#hZ8iXUE-~zCwt~M-o{',
+      'Vusi4s~Qr n`VmQ~jyx|+7RkuoHS;-PxEJ- |[hnQOo/{@0?Y|qO5v8j3L)bx+m,',
+      'zuGx`J|-btQ*9c+@z 4x}$Bt$G%x.-8eC0K7RI|P,xd{ceGz!IZIKuTGU74s#51{',
+      'K$YefB,<tf<w-m&w@Wq}GZV&r|,FU`D_r$q476$6rVu^$;&)_UPyhh+ipeWn+vo2',
+      'IY%k2FpCHU/AaKjw%+uSXmnUBzdr1C.X6{-K>UR-~ppSq.t~7$A=c!6p;g|VbuOv',
+      '(sMy)G{0AQ;B}ujZGKIx) ^-8y6<V [arIdOoqS7;&T`i!?u!(Um+H%R2hg0QWv[',
+      'rX$~x{[%-MO$^f>#=2[FZ6ach#:$)G|[|-E`r`WuN`727h^q-p3T~Yf#dH3(4cy=',
+      '6.B*-{*2<=X Y20l1{gnT| VEQqB;FTb(_M6qKQHo}V(AYpyvnp6<q5E:)?M>/mt'
+    );
+
+    private static $authHeader = '
+      Authorization: OAuth oauth_consumer_key="%CONSUMER_KEY%",
+      oauth_nonce="%NONCE%",
+      oauth_signature="%OAUTH_SIGNATURE%",
+      oauth_signature_method="HMAC-SHA1",
+      oauth_timestamp="%TIMESTAMP%",
+      oauth_token="%OAUTH_TOKEN%", oauth_version="1.0"';
+
+
+    public function setToken( $token ) {
+      $fh = fopen( './tokens/.token', 'w+' );
+      fwrite( $fh, $token );
+    }
+
+    public function getToken() {
+      $fh = fopen( 'tokens/.token', 'r+' );
+      $token = fread( $fh, filesize( 'tokens/.token' ) );
+      return (string) $token;
+    }
+
+    private function sign( $call ) {
+
+      /* https://dev.twitter.com/docs/auth/creating-signature */
+
+      $string = '';
+      $params = array();
+
+      foreach ( $call->params as $key => $value )
+        $params[rawurlencode( $key )] = rawurlencode( $value );
+
+      ksort( $params );
+
+      $string .= strtoupper( $call->method ) . '&';
+      $string .= rawurlencode( $call->url ) . '&';
+
+      $first = true;
+      foreach ( $params as $key => $value ) {
+        if ( $first ) {
+          $first = false;
+          $string .= $key . '=' . $value;
+        } else {
+          $string .= '&' . $key . '=' . $value;
+        }
+      }
+
+      $signatureBaseString = $string;
+      $signatureKey = self::$consumerSecret . '&' . $this->getToken();
+
+      $signature = base64_encode( hash_hmac( 'sha1', $signatureBaseString, $signatureKey ) );
+
+      return $signature;
+
+    }
+
+    private function getAuthHeader( $call ) {
+
+      $tags = array(
+        '%CONSUMER_KEY%',
+        '%NONCE%',
+        '%OAUTH_SIGNATURE%',
+        '%TIMESTAMP%',
+        '%OAUTH_TOKEN%'
+      );
+
+      $values = array(
+        self::$consumerKey,                                             // oauth_consumer_key
+        sha1( self::$salt[mt_rand( 0, count( self::$salt ) - 1 )] ),    // oauth_nonce
+        $this->sign( $call ),                                           // oauth_signature
+        time(),
+        $this->getToken()
+      );
+
+      $header = str_replace( $tags, $values, self::$authHeader);
+      return $header;
+    }
+
     public function authenticate() {
 
       /**
@@ -92,7 +201,7 @@
       $options = array(
         CURLOPT_POST => true,
         CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_SSL_VERIFYPEER => true,  // Warning! MitM exposed if set to false!
+        CURLOPT_SSL_VERIFYPEER => true,  // Always require SSL!
         CURLOPT_HTTPHEADER => array(
           'Authorization: Basic ' . $token,
           'Content-Type: application/x-www-form-urlencoded;charset=UTF-8'
@@ -102,12 +211,43 @@
 
       $response = json_decode( API::call( self::$oAuth, $options ) );
 
-      if ( isset( $response->access_token ) ) {
-        $this->accessToken = $response->access_token;
-        return $response->access_token;
+      $this->setToken( $response->access_token );
+      return $this->getToken();
+
+    }
+
+    public function user() {
+
+      $post = json_decode( file_get_contents( 'php://input' ) );
+      $username = ( mysql_real_escape_string( $post->username ) ? mysql_real_escape_string( $post->username ) : false );
+
+      if ( $username !== false ) {
+
+        $call = (object) array(
+          'method' => 'GET',
+          'url'    => self::$API . '/users/show.json',
+          'params' => array(
+            'screen_name' => $username
+          )
+        );
+
+        $options = array(
+          CURLOPT_POST => false,
+          CURLOPT_RETURNTRANSFER => true,
+          CURLOPT_HTTPHEADER => $this->getAuthHeader( $call )
+        );
+
+        $response = API::call( $call->url, $options );
+
       } else {
-        return $response;
+
+        $response = json_encode( array( 'response' => false ) );
+
       }
+
+
+
+      return $response;
     }
 
   }
