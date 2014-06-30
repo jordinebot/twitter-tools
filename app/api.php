@@ -120,7 +120,7 @@
       '6.B*-{*2<=X Y20l1{gnT| VEQqB;FTb(_M6qKQHo}V(AYpyvnp6<q5E:)?M>/mt'
     );
 
-    private static $authHeader = '
+    private static $oauthHeader = '
       Authorization: OAuth oauth_consumer_key="%CONSUMER_KEY%",
       oauth_nonce="%NONCE%",
       oauth_signature="%OAUTH_SIGNATURE%",
@@ -206,7 +206,7 @@
         $this->getToken()
       );
 
-      $header = str_replace( $tags, $values, self::$authHeader );
+      $header = str_replace( $tags, $values, self::$oauthHeader );
       return explode( ',', $header );
     }
 
@@ -268,7 +268,7 @@
 
         $call = (object) array(
           'method' => 'GET',
-          'url'    => self::$API . '/followers/ids.json',
+          'url'    => self::$API . '/users/show.json',
           'params' => array(
             'screen_name' => $username
           )

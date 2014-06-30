@@ -17,8 +17,7 @@ twitterToolsApp.controller('mainController', function($scope, $http) {
   };
   nameChanged = function(newValue, oldValue, scope) {
     var user;
-    user = twitterInterface.getUser(newValue);
-    return console.log(user);
+    return user = twitterInterface.getUser(newValue);
   };
   return $scope.$watch($scope.getUsername, nameChanged);
 });

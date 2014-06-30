@@ -16,6 +16,6 @@ twitterToolsApp.controller 'mainController', ($scope, $http) ->
 
   nameChanged = (newValue, oldValue, scope) ->
     user = twitterInterface.getUser newValue
-    console.log user
+    if user.ids =
 
   $scope.$watch $scope.getUsername, nameChanged
