@@ -19,6 +19,7 @@
   ],
   "dependencies": {
     "karma": "~0.2.2",
-    "angular": "~1.2.18"
+    "angular": "~1.2.18",
+    "angular-timeago": "~0.1.2"
   }
 }

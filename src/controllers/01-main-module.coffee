@@ -1,1 +1,1 @@
-twitterToolsApp = angular.module 'twitterToolsApp', []
+twitterToolsApp = angular.module 'twitterToolsApp', ['yaru22.angular-timeago']

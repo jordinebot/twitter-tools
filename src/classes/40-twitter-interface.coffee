@@ -7,6 +7,12 @@ class TwitterClientInterface
 
     @response = false
 
+  setScope: (scope) ->
+    @scope = scope
+
+  setTimer: (timeout) ->
+    @timeout = timeout
+
   setAjax: (ajax) ->
     @ajax = ajax
 
@@ -22,10 +28,21 @@ class TwitterClientInterface
   getUser: (user) ->
     if @ajax?
       @ajax.post @api + 'user', { username : user }
-           .success (data, status, headers, config) =>
-              @response = data
-    @response
+           .success (profile, status, headers, config) =>
+              if profile.id?
+                console.log profile
+                @timeout () =>
+                  @scope.$apply () =>
+                    @scope.user.bio = profile.description
+                    @scope.user.last_tweeted = profile.status.created_at if profile.status?
+                    @scope.user.friends = profile.friends_count
+                    @scope.user.followers = profile.followers_count
+                    @scope.status.loaded = true
+              else
+                @timeout () =>
+                  @scope.$apply () =>
+                    @scope.status.loaded = false
 
-
+              @scope.status.loading = false
 
 

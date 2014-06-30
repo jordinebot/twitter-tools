@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <title>Twitter Tools</title>
   <script src="components/angular/angular.js"></script>
+  <script src="components/angular-timeago/angular-timeago.js"></script>
   <script src="js/classes.js"></script>
   <script src="js/controllers.js"></script>
 </head>
@@ -12,6 +13,13 @@
   <h1>Twtools</h1>
   <label for="username">Enter your twitter username (without @):</label>
   <input ng-model="user.name"/>
-
+  <p ng-show="status.loading">Loading...</p>
+  <h2 ng-show="status.loaded">{{user.name}}</h2>
+  <p ng-show="status.loaded">{{user.bio}}</p>
+  <p ng-show="status.loaded">{{user.last_tweeted|timeAgo}}</p>
+  <ul ng-show="status.loaded">
+    <li>Following: {{user.friends}}</li>
+    <li>Followers: {{user.followers}}</li>
+  </ul>
 </body>
 </html>
