@@ -36,7 +36,21 @@
         ╚═╝  ╚═╝ ╚═╝      ╚═╝
      */
 
-    public static function call( $url, $options = null, $debug = false ) {
+    public static function call( $call, $options = null, $debug = false ) {
+
+      $url = $call->url;
+
+      if ( $call->method == 'GET' ) {
+        $first = true;
+        foreach ( $call->params as $key => $value ) {
+          if ( $first ) {
+            $first = false;
+            $url .= '?' . $key . '=' . $value;
+          } else {
+            $url .= '&' . $key . '=' . $value;
+          }
+        }
+      }
 
       $ch = curl_init( $url );
 
@@ -56,6 +70,7 @@
         curl_exec( $ch );
         return curl_error( $ch );
       } else {
+        //return json_encode( array( 'url' => $url, 'call' => $call, 'options' => $options ) );
         return curl_exec( $ch );
       }
     }
@@ -94,8 +109,6 @@
     private static $consumerKey = 'ENvQnYTjQcBrChs5eW7QIYuMx';
     private static $consumerSecret = '5R6aJUWfp0s3mdF3WaeBgmn8d9pTyOSfrwtWiik0ydWbxJX8tK';
 
-    private $accessToken = '';
-
     private static $salt = array(
       '+_YMK*o)(<gq$A$I%$O!lItb&G7rgNfV&#<!4]F-7zoH>#hZ8iXUE-~zCwt~M-o{',
       'Vusi4s~Qr n`VmQ~jyx|+7RkuoHS;-PxEJ- |[hnQOo/{@0?Y|qO5v8j3L)bx+m,',
@@ -115,6 +128,8 @@
       oauth_timestamp="%TIMESTAMP%",
       oauth_token="%OAUTH_TOKEN%", oauth_version="1.0"';
 
+    private static $bearerHeader = 'Authorization: Bearer %BEARER_TOKEN%';
+
 
     public function setToken( $token ) {
       $fh = fopen( './tokens/.token', 'w+' );
@@ -127,12 +142,20 @@
       return (string) $token;
     }
 
-    private function sign( $call ) {
+    private function sign( $call, $nonce, $timestamp ) {
 
       /* https://dev.twitter.com/docs/auth/creating-signature */
 
       $string = '';
       $params = array();
+
+      //  Include all oauth_* params on the signature string
+      $call->params['oauth_consumer_key'] = self::$consumerKey;
+      $call->params['oauth_nonce'] = $nonce;
+      $call->params['oauth_signature_method'] = 'HMAC-SHA1';
+      $call->params['oauth_timestamp'] = $timestamp;
+      $call->params['oauth_token'] = $this->getToken();
+      $call->params['oauth_version'] = '1.0';
 
       foreach ( $call->params as $key => $value )
         $params[rawurlencode( $key )] = rawurlencode( $value );
@@ -146,9 +169,9 @@
       foreach ( $params as $key => $value ) {
         if ( $first ) {
           $first = false;
-          $string .= $key . '=' . $value;
+          $string .= $key . '%3D' . $value;
         } else {
-          $string .= '&' . $key . '=' . $value;
+          $string .= '%26' . $key . '%3D' . $value;
         }
       }
 
@@ -157,6 +180,7 @@
 
       $signature = base64_encode( hash_hmac( 'sha1', $signatureBaseString, $signatureKey ) );
 
+      /* return $signatureBaseString; */
       return $signature;
 
     }
@@ -171,16 +195,32 @@
         '%OAUTH_TOKEN%'
       );
 
+      $nonce = sha1( self::$salt[mt_rand( 0, count( self::$salt ) - 1 )] );
+      $timestamp = time();
+
       $values = array(
-        self::$consumerKey,                                             // oauth_consumer_key
-        sha1( self::$salt[mt_rand( 0, count( self::$salt ) - 1 )] ),    // oauth_nonce
-        $this->sign( $call ),                                           // oauth_signature
-        time(),
+        self::$consumerKey,                           // oauth_consumer_key
+        $nonce,                                       // oauth_nonce
+        $this->sign( $call, $nonce, $timestamp ),     // oauth_signature
+        $timestamp,
         $this->getToken()
       );
 
-      $header = str_replace( $tags, $values, self::$authHeader);
-      return $header;
+      $header = str_replace( $tags, $values, self::$authHeader );
+      return explode( ',', $header );
+    }
+
+    private function getBearerHeader( $call ) {
+      $tags = array(
+        '%BEARER_TOKEN%'
+      );
+
+      $values = array(
+        $this->getToken()
+      );
+
+      $header = str_replace( $tags, $values, self::$bearerHeader );
+      return explode( ',', $header );
     }
 
     public function authenticate() {
@@ -189,7 +229,7 @@
        * Oauth Process
        */
 
-      /* Step 1 */
+      /* Step 1: Encode consumer key and secret */
 
       $token = rawurlencode( self::$consumerKey );
       $token = base64_encode( $token . ':' . self::$consumerSecret );
@@ -211,7 +251,10 @@
 
       $response = json_decode( API::call( self::$oAuth, $options ) );
 
-      $this->setToken( $response->access_token );
+      if ( $response->token_type == 'bearer' ) {
+        $this->setToken( $response->access_token );
+      }
+
       return $this->getToken();
 
     }
@@ -225,7 +268,7 @@
 
         $call = (object) array(
           'method' => 'GET',
-          'url'    => self::$API . '/users/show.json',
+          'url'    => self::$API . '/followers/ids.json',
           'params' => array(
             'screen_name' => $username
           )
@@ -234,18 +277,16 @@
         $options = array(
           CURLOPT_POST => false,
           CURLOPT_RETURNTRANSFER => true,
-          CURLOPT_HTTPHEADER => $this->getAuthHeader( $call )
+          CURLOPT_HTTPHEADER => $this->getBearerHeader( $call )
         );
 
-        $response = API::call( $call->url, $options );
+        $response = API::call( $call, $options );
 
       } else {
 
         $response = json_encode( array( 'response' => false ) );
 
       }
-
-
 
       return $response;
     }
