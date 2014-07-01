@@ -13,19 +13,38 @@ twitterToolsApp.controller('mainController', function($scope, $http, $timeout) {
   $scope.user = {
     name: '',
     bio: '',
-    last_tweeted: ''
+    last_tweeted: '',
+    friends: [],
+    followers: []
   };
   $scope.status = {
-    loading: false,
-    loaded: false
+    loading: {
+      user: false,
+      followers: false
+    },
+    loaded: {
+      user: false,
+      followers: false
+    },
+    progress: 0,
+    overall: 100
   };
   $scope.getUsername = function() {
     return $scope.user.name;
   };
+  $scope.getFollowers = function() {
+    if (!$scope.status.loading.followers) {
+      $scope.status.loading.followers = true;
+      $scope.status.overall = $scope.user.followers_count;
+      return twitterInterface.getFollowers($scope.user.name);
+    } else {
+      return console.log('Followers info is already being fetched!');
+    }
+  };
   nameChanged = function(newValue, oldValue, scope) {
-    $scope.status.loaded = false;
+    $scope.status.loaded.user = false;
     if (newValue !== '') {
-      $scope.status.loading = true;
+      $scope.status.loading.user = true;
     }
     return twitterInterface.getUser(newValue);
   };

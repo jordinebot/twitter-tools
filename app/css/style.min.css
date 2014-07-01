@@ -1,1 +1,1 @@
-*{margin:0;border:0;padding:0}
+*{-webkit-box-sizing:border-box;-moz-box-sizing:border-box;-ms-box-sizing:border-box;-o-box-sizing:border-box;box-sizing:border-box}.follower{list-style:none;margin:0 5px 0 0;float:left}.progress-bar{position:relative;border:1px solid #CCC;width:50%;height:22px}.progress-bar .bar{position:absolute;width:0;height:100%;background-color:#4099FF}.progress-bar .info{position:absolute;width:100%;height:100%;text-align:center}

@@ -7,13 +7,11 @@ module.exports = function(grunt) {
       dev: {
         files: {
           'app/css/style.css' : 'sass/style.scss',
-          'app/css/admin.css' : 'sass/admin.scss'
         }
       },
       dist: {
         files: {
           'app/css/style.min.css' : 'sass/style.scss',
-          'app/css/admin.min.css' : 'sass/admin.scss'
         },
         options: {
           'style': 'compressed'

@@ -18,6 +18,15 @@
         print_r( $serverInterface->user() );
         break;
 
+      case 'followers':
+        header( 'Content-type: application/json' );
+        print_r( $serverInterface->followers() );
+        break;
+
+      case 'user_by_id':
+        header( 'Content-type: application/json' );
+        print_r( $serverInterface->user(true) );
+
       default:
         break;
     }
@@ -91,8 +100,8 @@
     /*
 
       curl --get 'https://api.twitter.com/1.1/statuses/user_timeline.json'
-           --data 'screen_name=nocilla'
-           --header 'Authorization: OAuth oauth_consumer_key="BFfp4XnV8iQlUo33mPYHEg",
+           --data 'screen_name=jordinebot'
+           --header 'Authorization: OAuth oauth_consumer_key="ENvQnYTjQcBrChs5eW7QIYuMx",
                     oauth_nonce="d79afa3dd294e9fb65a28b01e8dddb54",
                     oauth_signature="hSqqRJRUiUa6O6wRqR9eAOyWYtc%3D",
                     oauth_signature_method="HMAC-SHA1",
@@ -259,18 +268,54 @@
 
     }
 
-    public function user() {
+    public function user( $queryById = false ) {
 
       $post = json_decode( file_get_contents( 'php://input' ) );
       $username = ( mysql_real_escape_string( $post->username ) ? mysql_real_escape_string( $post->username ) : false );
 
       if ( $username !== false ) {
 
+        $field = $queryById ? 'user_id' : 'screen_name';
+
         $call = (object) array(
           'method' => 'GET',
           'url'    => self::$API . '/users/show.json',
           'params' => array(
-            'screen_name' => $username
+            $field => $username
+          )
+        );
+
+        $options = array(
+          CURLOPT_POST => false,
+          CURLOPT_RETURNTRANSFER => true,
+          CURLOPT_HTTPHEADER => $this->getBearerHeader( $call )
+        );
+
+        $response = API::call( $call, $options );
+
+      } else {
+
+        $response = json_encode( array( 'response' => false ) );
+
+      }
+
+      return $response;
+    }
+
+    public function followers() {
+
+      $post = json_decode( file_get_contents( 'php://input' ) );
+      $username = ( mysql_real_escape_string( $post->username ) ? mysql_real_escape_string( $post->username ) : false );
+      $cursor = ( mysql_real_escape_string( $post->cursor ) ? mysql_real_escape_string( $post->cursor ) : false );
+
+      if ( $username !== false ) {
+
+        $call = (object) array(
+          'method' => 'GET',
+          'url'    => self::$API . '/followers/ids.json',
+          'params' => array(
+            'screen_name' => $username,
+            'cursor' => $cursor
           )
         );
 

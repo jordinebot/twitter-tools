@@ -7,19 +7,28 @@
   <script src="components/angular-timeago/angular-timeago.js"></script>
   <script src="js/classes.js"></script>
   <script src="js/controllers.js"></script>
+  <link rel="stylesheet" type="text/css" href="css/style.css">
 </head>
 <body ng-controller="mainController">
 
   <h1>Twtools</h1>
   <label for="username">Enter your twitter username (without @):</label>
   <input ng-model="user.name"/>
-  <p ng-show="status.loading">Loading...</p>
-  <h2 ng-show="status.loaded">{{user.name}}</h2>
-  <p ng-show="status.loaded">{{user.bio}}</p>
-  <p ng-show="status.loaded">{{user.last_tweeted|timeAgo}}</p>
-  <ul ng-show="status.loaded">
-    <li>Following: {{user.friends}}</li>
-    <li>Followers: {{user.followers}}</li>
+  <p ng-show="status.loading.user">Loading...</p>
+  <h2 ng-show="status.loaded.user">{{user.name}}</h2>
+  <p ng-show="status.loaded.user">{{user.bio}}</p>
+  <p ng-show="status.loaded.user">{{user.last_tweeted|timeAgo}}</p>
+  <ul ng-show="status.loaded.user">
+    <li>Following: {{user.friends_count}}</li>
+    <li>Followers: {{user.followers_count}}</li>
+  </ul>
+  <button ng-show="status.loaded.user" ng-click="getFollowers()">Followers info</button>
+  <div ng-show="status.loading.followers" class="progress-bar">
+    <div class="bar" style="width: {{status.progress / status.overall * 100}}%;"></div>
+    <div class="info">{{status.progress}}/{{status.overall}}</div>
+  </div>
+  <ul>
+    <li class="follower" ng-repeat="follower in user.followers">{{follower.screen_name}} <span>{{follower.last_tweeted|timeAgo}}</span></li>
   </ul>
 </body>
 </html>
