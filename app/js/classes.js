@@ -21,9 +21,18 @@ TwitterClientInterface = (function() {
     return this.ajax = ajax;
   };
 
-  TwitterClientInterface.prototype.authenticate = function() {
-    if (this.ajax != null) {
-      return this.ajax.get(this.api + 'authenticate').success((function(_this) {
+  TwitterClientInterface.prototype.authenticate = function(oauth) {
+    if (oauth == null) {
+      oauth = false;
+    }
+    if ((this.ajax != null) && !oauth) {
+      return this.ajax.get(this.api + 'app_auth').success((function(_this) {
+        return function(data, status, headers, config) {
+          return _this.keys.token = data.token;
+        };
+      })(this));
+    } else if ((this.ajax != null) && oauth) {
+      return this.ajax.get(this.api + 'user_auth').success((function(_this) {
         return function(data, status, headers, config) {
           return _this.keys.token = data.token;
         };

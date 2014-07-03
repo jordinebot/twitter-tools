@@ -3,14 +3,25 @@
   error_reporting(E_ERROR);
   ini_set('display_errors', 1);
 
+  define( 'USER_BY_ID', true );
+  define( 'APP_ONLY_AUTHENTICATION', 1 );
+  define( 'OAUTH_AUTHENTICATION', 2 );
+
   $serverInterface = new TwitterServerInterface();
 
   foreach ($_GET as $key => $value) {
     switch ( $value ) {
 
-      case 'authenticate':
+      case 'app_auth':
         header( 'Content-type: application/json' );
-        echo json_encode( array( 'token' => $serverInterface->authenticate() ) );
+        $response = $serverInterface->authenticate( APP_ONLY_AUTHENTICATION );
+        echo json_encode( array( 'token' => $response ) );
+        break;
+
+      case 'user_auth':
+        header( 'Content-type: application/json' );
+        $response = $serverInterface->authenticate( OAUTH_AUTHENTICATION );
+        echo json_encode( array( 'token' => $response ) );
         break;
 
       case 'user':
@@ -25,7 +36,7 @@
 
       case 'user_by_id':
         header( 'Content-type: application/json' );
-        print_r( $serverInterface->user(true) );
+        print_r( $serverInterface->user( USER_BY_ID ) );
 
       default:
         break;
@@ -232,39 +243,55 @@
       return explode( ',', $header );
     }
 
-    public function authenticate() {
+    public function authenticate( $authMethod = APP_ONLY_AUTHENTICATION ) {
 
       /**
-       * Oauth Process
+       * App Only Authorization / OAuth
        */
 
-      /* Step 1: Encode consumer key and secret */
+      switch ( $authMethod ) {
 
-      $token = rawurlencode( self::$consumerKey );
-      $token = base64_encode( $token . ':' . self::$consumerSecret );
+        case APP_ONLY_AUTHENTICATION:
 
-      /* Step 2 */
+          /* Step 1: Encode consumer key and secret */
 
-      $data = 'grant_type=client_credentials';
+          $token = rawurlencode( self::$consumerKey );
+          $token = base64_encode( $token . ':' . self::$consumerSecret );
 
-      $options = array(
-        CURLOPT_POST => true,
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_SSL_VERIFYPEER => true,  // Always require SSL!
-        CURLOPT_HTTPHEADER => array(
-          'Authorization: Basic ' . $token,
-          'Content-Type: application/x-www-form-urlencoded;charset=UTF-8'
-        ),
-        CURLOPT_POSTFIELDS => $data
-      );
+          /* Step 2 */
 
-      $response = json_decode( API::call( self::$oAuth, $options ) );
+          $data = 'grant_type=client_credentials';
 
-      if ( $response->token_type == 'bearer' ) {
-        $this->setToken( $response->access_token );
+          $options = array(
+            CURLOPT_POST => true,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_SSL_VERIFYPEER => true,  // Always require SSL!
+            CURLOPT_HTTPHEADER => array(
+              'Authorization: Basic ' . $token,
+              'Content-Type: application/x-www-form-urlencoded;charset=UTF-8'
+            ),
+            CURLOPT_POSTFIELDS => $data
+          );
+
+          $response = json_decode( API::call( self::$oAuth, $options ) );
+
+          if ( $response->token_type == 'bearer' ) {
+            $this->setToken( $response->access_token );
+          }
+
+          return $this->getToken();
+          break;
+
+        case OAUTH_AUTHENTICATION:
+          # code...
+          break;
+
+        default:
+          # code...
+          break;
       }
 
-      return $this->getToken();
+
 
     }
 

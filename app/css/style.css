@@ -6,6 +6,14 @@
   box-sizing: border-box; }
 
 /* make global */
+img {
+  display: block;
+  position: relative; }
+  img[ng-click] {
+    cursor: pointer; }
+    img[ng-click]:active {
+      top: 2px; }
+
 .follower {
   list-style: none;
   margin: 0 5px 0 0;

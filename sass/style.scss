@@ -8,6 +8,17 @@
 
 * { @include box-sizing(); } /* make global */
 
+img {
+  display: block;
+  position: relative;
+  &[ng-click] {
+    cursor: pointer;
+    &:active {
+      top: 2px;
+    }
+  }
+}
+
 .follower{
   list-style: none;
   margin: 0 5px 0 0;

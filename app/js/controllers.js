@@ -2,6 +2,13 @@ var twitterToolsApp;
 
 twitterToolsApp = angular.module('twitterToolsApp', ['yaru22.angular-timeago']);
 
+twitterToolsApp.controller('loginController', function($scope, $http) {
+  $http.defaults.headers.post["Content-Type"] = "application/x-www-form-urlencoded";
+  return $scope.twitterSignIn = function() {
+    return console.log('login in');
+  };
+});
+
 twitterToolsApp.controller('mainController', function($scope, $http, $timeout) {
   var nameChanged, twitterInterface;
   $http.defaults.headers.post["Content-Type"] = "application/x-www-form-urlencoded";
