@@ -21,11 +21,21 @@ TwitterClientInterface = (function() {
     return this.ajax = ajax;
   };
 
-  TwitterClientInterface.prototype.authenticate = function() {
-    if (this.ajax != null) {
+  TwitterClientInterface.prototype.authenticate = function(method) {
+    if (method == null) {
+      method = 'app';
+    }
+    if ((this.ajax != null) && method === 'app') {
       return this.ajax.get(this.api + 'authenticate').success((function(_this) {
         return function(data, status, headers, config) {
           return _this.keys.token = data.token;
+        };
+      })(this));
+    } else if ((this.ajax != null) && method === 'oauth') {
+      OAuth.initialize('QB3YKlQOuN5vYnXz-K2EVV9nSBw');
+      return OAuth.popup('twitter').done((function(_this) {
+        return function(result) {
+          return console.log(result);
         };
       })(this));
     } else {

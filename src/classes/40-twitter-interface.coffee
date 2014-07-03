@@ -16,12 +16,17 @@ class TwitterClientInterface
   setAjax: (ajax) ->
     @ajax = ajax
 
-  authenticate: () -> # https://dev.twitter.com/docs/auth/application-only-auth
-    if @ajax?
+  authenticate: (method) -> # https://dev.twitter.com/docs/auth/application-only-auth
+    method ?= 'app'
+    if @ajax? and method is 'app'
       # Application-only authentication
       @ajax.get @api + 'authenticate'
            .success (data, status, headers, config) =>
               @keys.token = data.token
+    else if @ajax? and method is 'oauth'
+      OAuth.initialize 'QB3YKlQOuN5vYnXz-K2EVV9nSBw'
+      OAuth.popup('twitter').done (result) =>
+          console.log result
     else
       false
 
