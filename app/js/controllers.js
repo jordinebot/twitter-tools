@@ -2,6 +2,18 @@ var twitterToolsApp;
 
 twitterToolsApp = angular.module('twitterToolsApp', ['yaru22.angular-timeago']);
 
+twitterToolsApp.controller('loginController', function($scope, $http) {
+  var twitterInterface;
+  $http.defaults.headers.post["Content-Type"] = "application/x-www-form-urlencoded";
+  twitterInterface = new TwitterClientInterface();
+  twitterInterface.setScope($scope);
+  twitterInterface.setAjax($http);
+  return $scope.twitterSignIn = function() {
+    console.log('OAuth');
+    return twitterInterface.authenticate('oauth');
+  };
+});
+
 twitterToolsApp.controller('mainController', function($scope, $http, $timeout) {
   var nameChanged, twitterInterface;
   $http.defaults.headers.post["Content-Type"] = "application/x-www-form-urlencoded";
