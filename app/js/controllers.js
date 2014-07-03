@@ -1,9 +1,10 @@
-var twitterToolsApp;
+var twitterInterface, twitterToolsApp;
+
+twitterInterface = new TwitterClientInterface();
 
 twitterToolsApp = angular.module('twitterToolsApp', ['yaru22.angular-timeago']);
 
 twitterToolsApp.controller('loginController', function($scope, $http) {
-  var twitterInterface;
   $http.defaults.headers.post["Content-Type"] = "application/x-www-form-urlencoded";
   twitterInterface = new TwitterClientInterface();
   twitterInterface.setScope($scope);
@@ -15,13 +16,12 @@ twitterToolsApp.controller('loginController', function($scope, $http) {
 });
 
 twitterToolsApp.controller('mainController', function($scope, $http, $timeout) {
-  var nameChanged, twitterInterface;
+  var nameChanged;
   $http.defaults.headers.post["Content-Type"] = "application/x-www-form-urlencoded";
   twitterInterface = new TwitterClientInterface();
   twitterInterface.setScope($scope);
   twitterInterface.setTimer($timeout);
   twitterInterface.setAjax($http);
-  twitterInterface.authenticate();
   $scope.user = {
     name: '',
     bio: '',

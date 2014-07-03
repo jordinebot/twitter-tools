@@ -8,15 +8,12 @@ twitterToolsApp.controller 'mainController', ($scope, $http, $timeout) ->
   twitterInterface.setTimer $timeout
   twitterInterface.setAjax $http
 
-  twitterInterface.authenticate()
-
   $scope.user =
     name:           ''
     bio:            ''
     last_tweeted:   ''
     friends:        []
     followers:      []
-
 
   $scope.status =
     loading:

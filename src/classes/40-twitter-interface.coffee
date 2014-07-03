@@ -3,9 +3,9 @@ class TwitterClientInterface
     @api = 'api.php/?action='
 
     @keys =
-      oauth : ''
+      oauth_io : 'QB3YKlQOuN5vYnXz-K2EVV9nSBw'
 
-    @response = false
+    @twitter = null
 
   setScope: (scope) ->
     @scope = scope
@@ -17,21 +17,26 @@ class TwitterClientInterface
     @ajax = ajax
 
   authenticate: (method) -> # https://dev.twitter.com/docs/auth/application-only-auth
-    method ?= 'app'
-    if @ajax? and method is 'app'
+    @method = method ?= 'app'
+
+    if @ajax? and @method is 'app'
       # Application-only authentication
       @ajax.get @api + 'authenticate'
            .success (data, status, headers, config) =>
-              @keys.token = data.token
-    else if @ajax? and method is 'oauth'
-      OAuth.initialize 'QB3YKlQOuN5vYnXz-K2EVV9nSBw'
+              console.log 'Application-only authentication success'
+
+    else if @ajax? and @method is 'oauth'
+      #OAuth authentication using http://oauth.io
+      OAuth.initialize @keys.oauth_io
       OAuth.popup('twitter').done (result) =>
-          console.log result
+        @twitter = result
+        result.me().done (data) =>
+          console.log data
     else
       false
 
   getUser: (user) ->
-    if @ajax?
+    if @ajax? and @method is 'app'
       @ajax.post @api + 'user', { username : user }
            .success (profile, status, headers, config) =>
               if profile.id?
@@ -52,6 +57,20 @@ class TwitterClientInterface
 
               if profile.errors?
                 console.log 'Error: ' + error.code + ' [' + error.message + ']' for error in profile.errors
+
+    if @ajax? and @method is 'oauth' and @twitter?
+      @twitter.me().done (profile) =>
+        @timeout () =>
+          @scope.$apply () =>
+            @scope.user.bio = profile.raw.description
+            @scope.user.last_tweeted = profile.raw.status.created_at if profile.status?
+            @scope.user.friends_count = profile.raw.friends_count
+            @scope.user.followers_count = profile.raw.followers_count
+            @scope.status.loaded.user = true
+
+    else
+      console.log 'Cannot retrieve user...'
+
 
   getUserById: (id) ->
     if @ajax?

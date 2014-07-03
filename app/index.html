@@ -11,7 +11,11 @@
   <link rel="stylesheet" type="text/css" href="css/style.css">
 </head>
 <body ng-controller="mainController">
-
+  <div id="loginForm" ng-controller="loginController">
+    <img src="img/twitter_sign_in.png" ng-click="twitterSignIn()"/>
+    <!-- 'Sign in with Twitter' button from @dribbble by Andy Law
+         at https://dribbble.com/shots/1091688-Social-Sign-In-Buttons -->
+  </div>
   <h1>Twtools</h1>
   <label for="username">Enter your twitter username (without @):</label>
   <input ng-model="user.name"/>

@@ -4,9 +4,9 @@ TwitterClientInterface = (function() {
   function TwitterClientInterface() {
     this.api = 'api.php/?action=';
     this.keys = {
-      oauth: ''
+      oauth_io: 'QB3YKlQOuN5vYnXz-K2EVV9nSBw'
     };
-    this.response = false;
+    this.twitter = null;
   }
 
   TwitterClientInterface.prototype.setScope = function(scope) {
@@ -22,20 +22,21 @@ TwitterClientInterface = (function() {
   };
 
   TwitterClientInterface.prototype.authenticate = function(method) {
-    if (method == null) {
-      method = 'app';
-    }
-    if ((this.ajax != null) && method === 'app') {
+    this.method = method != null ? method : method = 'app';
+    if ((this.ajax != null) && this.method === 'app') {
       return this.ajax.get(this.api + 'authenticate').success((function(_this) {
         return function(data, status, headers, config) {
-          return _this.keys.token = data.token;
+          return console.log('Application-only authentication success');
         };
       })(this));
-    } else if ((this.ajax != null) && method === 'oauth') {
-      OAuth.initialize('QB3YKlQOuN5vYnXz-K2EVV9nSBw');
+    } else if ((this.ajax != null) && this.method === 'oauth') {
+      OAuth.initialize(this.keys.oauth_io);
       return OAuth.popup('twitter').done((function(_this) {
         return function(result) {
-          return console.log(result);
+          _this.twitter = result;
+          return result.me().done(function(data) {
+            return console.log(data);
+          });
         };
       })(this));
     } else {
@@ -44,8 +45,8 @@ TwitterClientInterface = (function() {
   };
 
   TwitterClientInterface.prototype.getUser = function(user) {
-    if (this.ajax != null) {
-      return this.ajax.post(this.api + 'user', {
+    if ((this.ajax != null) && this.method === 'app') {
+      this.ajax.post(this.api + 'user', {
         username: user
       }).success((function(_this) {
         return function(profile, status, headers, config) {
@@ -82,6 +83,25 @@ TwitterClientInterface = (function() {
           }
         };
       })(this));
+    }
+    if ((this.ajax != null) && this.method === 'oauth' && (this.twitter != null)) {
+      return this.twitter.me().done((function(_this) {
+        return function(profile) {
+          return _this.timeout(function() {
+            return _this.scope.$apply(function() {
+              _this.scope.user.bio = profile.raw.description;
+              if (profile.status != null) {
+                _this.scope.user.last_tweeted = profile.raw.status.created_at;
+              }
+              _this.scope.user.friends_count = profile.raw.friends_count;
+              _this.scope.user.followers_count = profile.raw.followers_count;
+              return _this.scope.status.loaded.user = true;
+            });
+          });
+        };
+      })(this));
+    } else {
+      return console.log('Cannot retrieve user...');
     }
   };
 
