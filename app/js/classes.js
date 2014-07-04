@@ -85,7 +85,9 @@ TwitterClientInterface = (function() {
       })(this));
     }
     if ((this.ajax != null) && this.method === 'oauth' && (this.twitter != null)) {
-      return this.twitter.me().done((function(_this) {
+      return this.twitter.get('/1.1/users/show.json', {
+        screen_name: user
+      }).done((function(_this) {
         return function(profile) {
           return _this.timeout(function() {
             return _this.scope.$apply(function() {

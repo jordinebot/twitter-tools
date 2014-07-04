@@ -1,9 +1,8 @@
-twitterToolsApp.controller 'mainController', ($scope, $http, $timeout) ->
+twitterToolsApp.controller 'mainController', ($scope, $http, $timeout, twitterInterface) ->
 
   # Set default encoding data mode for POST data transmission
   $http.defaults.headers.post["Content-Type"] = "application/x-www-form-urlencoded";
 
-  twitterInterface = new TwitterClientInterface()
   twitterInterface.setScope $scope
   twitterInterface.setTimer $timeout
   twitterInterface.setAjax $http

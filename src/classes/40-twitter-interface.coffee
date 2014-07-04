@@ -59,14 +59,15 @@ class TwitterClientInterface
                 console.log 'Error: ' + error.code + ' [' + error.message + ']' for error in profile.errors
 
     if @ajax? and @method is 'oauth' and @twitter?
-      @twitter.me().done (profile) =>
-        @timeout () =>
-          @scope.$apply () =>
-            @scope.user.bio = profile.raw.description
-            @scope.user.last_tweeted = profile.raw.status.created_at if profile.status?
-            @scope.user.friends_count = profile.raw.friends_count
-            @scope.user.followers_count = profile.raw.followers_count
-            @scope.status.loaded.user = true
+      @twitter.get '/1.1/users/show.json', { screen_name : user }
+              .done (profile) =>
+                @timeout () =>
+                  @scope.$apply () =>
+                    @scope.user.bio = profile.raw.description
+                    @scope.user.last_tweeted = profile.raw.status.created_at if profile.status?
+                    @scope.user.friends_count = profile.raw.friends_count
+                    @scope.user.followers_count = profile.raw.followers_count
+                    @scope.status.loaded.user = true
 
     else
       console.log 'Cannot retrieve user...'
