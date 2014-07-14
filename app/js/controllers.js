@@ -33,10 +33,12 @@ twitterToolsApp.controller('mainController', function($scope, $http, $timeout, t
   $scope.status = {
     loading: {
       user: false,
+      friends: false,
       followers: false
     },
     loaded: {
       user: false,
+      friends: false,
       followers: false
     },
     progress: 0,
@@ -52,6 +54,15 @@ twitterToolsApp.controller('mainController', function($scope, $http, $timeout, t
       return twitterInterface.getFollowers($scope.user.name);
     } else {
       return console.log('Followers info is already being fetched!');
+    }
+  };
+  $scope.getFriends = function() {
+    if (!$scope.status.loading.friends) {
+      $scope.status.loading.friends = true;
+      $scope.status.overall = $scope.user.friends_count;
+      return twitterInterface.getFriends($scope.user.name);
+    } else {
+      return console.log('Friends info is already being fetched!');
     }
   };
   nameChanged = function(newValue, oldValue, scope) {

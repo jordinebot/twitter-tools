@@ -27,7 +27,17 @@
     <li>Following: {{user.friends_count}}</li>
     <li>Followers: {{user.followers_count}}</li>
   </ul>
+  <button ng-show="status.loaded.user" ng-click="getFriends()">Friends info</button>
   <button ng-show="status.loaded.user" ng-click="getFollowers()">Followers info</button>
+
+  <div ng-show="status.loading.friends" class="progress-bar">
+    <div class="bar" style="width: {{status.progress / status.overall * 100}}%;"></div>
+    <div class="info">{{status.progress}}/{{status.overall}}</div>
+  </div>
+  <ul>
+    <li class="friend" ng-repeat="friend in user.friends">{{friend.screen_name}} <span>{{friend.last_tweeted|timeAgo}}</span></li>
+  </ul>
+
   <div ng-show="status.loading.followers" class="progress-bar">
     <div class="bar" style="width: {{status.progress / status.overall * 100}}%;"></div>
     <div class="info">{{status.progress}}/{{status.overall}}</div>

@@ -107,7 +107,7 @@ TwitterClientInterface = (function() {
     }
   };
 
-  TwitterClientInterface.prototype.getUserById = function(id) {
+  TwitterClientInterface.prototype.getUserById = function(id, pile) {
     if ((this.ajax != null) && this.method === 'app') {
       this.ajax.post(this.api + 'user_by_id', {
         username: id
@@ -118,9 +118,9 @@ TwitterClientInterface = (function() {
             _this.timeout(function() {
               return _this.scope.$apply(function() {
                 _this.scope.status.progress++;
-                return _this.scope.user.followers.push({
+                return pile.push({
                   screen_name: profile.screen_name,
-                  last_tweeted: profile.status != null ? profile.status.created_at : void 0
+                  last_tweeted: profile.status != null ? profile.status.created_at : 0
                 });
               });
             });
@@ -145,9 +145,9 @@ TwitterClientInterface = (function() {
             _this.timeout(function() {
               return _this.scope.$apply(function() {
                 _this.scope.status.progress++;
-                return _this.scope.user.followers.push({
+                return pile.push({
                   screen_name: profile.screen_name,
-                  last_tweeted: profile.status != null ? profile.status.created_at : void 0
+                  last_tweeted: profile.status != null ? profile.status.created_at : 0
                 });
               });
             });
@@ -161,6 +161,84 @@ TwitterClientInterface = (function() {
             }
             return _results;
           }
+        };
+      })(this));
+    }
+  };
+
+  TwitterClientInterface.prototype.getFriends = function(user, cursor) {
+    if (cursor == null) {
+      cursor = -1;
+    }
+    if ((this.ajax != null) && this.method === 'app') {
+      if (cursor === -1) {
+        this.scope.user.friends = [];
+      }
+      this.ajax.post(this.api + 'friends', {
+        username: user,
+        cursor: cursor
+      }).success((function(_this) {
+        return function(friends, status, headers, config) {
+          var error, id, _i, _j, _len, _len1, _ref, _ref1, _ref2, _results;
+          if (((_ref = friends.ids) != null ? _ref.length : void 0) > 0) {
+            _ref1 = friends.ids;
+            for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+              id = _ref1[_i];
+              _this.getUserById(id, _this.scope.user.friends);
+            }
+            if (friends.next_cursor !== 0) {
+              _this.getFriends(user, friends.next_cursor);
+            } else {
+              if (_this.scope.status.progress >= _this.scope.status.overall) {
+                _this.scope.status.loading.friends = false;
+                _this.scope.status.loaded.friends = true;
+              }
+            }
+          }
+          if (friends.errors != null) {
+            _ref2 = friends.errors;
+            _results = [];
+            for (_j = 0, _len1 = _ref2.length; _j < _len1; _j++) {
+              error = _ref2[_j];
+              _results.push(console.log('Error: ' + error.code + ' [' + error.message + ']'));
+            }
+            return _results;
+          }
+        };
+      })(this));
+    }
+    if ((this.ajax != null) && this.method === 'oauth' && (this.twitter != null)) {
+      return this.twitter.get('/1.1/friends/ids.json?screen_name=' + user + '&cursor=' + cursor).done((function(_this) {
+        return function(friends) {
+          return _this.timeout(function() {
+            return _this.scope.$apply(function() {
+              var error, id, _i, _j, _len, _len1, _ref, _ref1, _ref2, _results;
+              if (((_ref = friends.ids) != null ? _ref.length : void 0) > 0) {
+                _ref1 = friends.ids;
+                for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+                  id = _ref1[_i];
+                  _this.getUserById(id, _this.scope.user.friends);
+                }
+                if (friends.next_cursor !== 0) {
+                  _this.getFriends(user, friends.next_cursor);
+                } else {
+                  if (_this.scope.status.progress >= _this.scope.status.overall) {
+                    _this.scope.status.loading.friends = false;
+                    _this.scope.status.loaded.friends = true;
+                  }
+                }
+              }
+              if (friends.errors != null) {
+                _ref2 = friends.errors;
+                _results = [];
+                for (_j = 0, _len1 = _ref2.length; _j < _len1; _j++) {
+                  error = _ref2[_j];
+                  _results.push(console.log('Error: ' + error.code + ' [' + error.message + ']'));
+                }
+                return _results;
+              }
+            });
+          });
         };
       })(this));
     }
@@ -184,7 +262,7 @@ TwitterClientInterface = (function() {
             _ref1 = followers.ids;
             for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
               id = _ref1[_i];
-              _this.getUserById(id);
+              _this.getUserById(id, _this.scope.user.followers);
             }
             if (followers.next_cursor !== 0) {
               _this.getFollowers(user, followers.next_cursor);
@@ -217,7 +295,7 @@ TwitterClientInterface = (function() {
                 _ref1 = followers.ids;
                 for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
                   id = _ref1[_i];
-                  _this.getUserById(id);
+                  _this.getUserById(id, _this.scope.user.followers);
                 }
                 if (followers.next_cursor !== 0) {
                   _this.getFollowers(user, followers.next_cursor);

@@ -74,7 +74,7 @@ class TwitterClientInterface
       console.log 'Cannot retrieve user...'
 
 
-  getUserById: (id) ->
+  getUserById: (id, pile) ->
     if @ajax? and @method is 'app'
       @ajax.post @api + 'user_by_id', { username : id }
            .success (profile, status, headers, config) =>
@@ -82,9 +82,9 @@ class TwitterClientInterface
                 @timeout () =>
                   @scope.$apply () =>
                     @scope.status.progress++
-                    @scope.user.followers.push {
+                    pile.push {
                       screen_name : profile.screen_name
-                      last_tweeted : profile.status.created_at if profile.status?
+                      last_tweeted : if profile.status? then profile.status.created_at else 0
                     }
 
               if profile.errors?
@@ -97,12 +97,49 @@ class TwitterClientInterface
                   @timeout () =>
                     @scope.$apply () =>
                       @scope.status.progress++
-                      @scope.user.followers.push {
+                      pile.push {
                         screen_name : profile.screen_name
-                        last_tweeted : profile.status.created_at if profile.status?
+                        last_tweeted : if profile.status? then profile.status.created_at else 0
                       }
                 if profile.errors?
                   console.log 'Error: ' + error.code + ' [' + error.message + ']' for error in profile.errors
+
+  getFriends: (user, cursor) ->
+    cursor ?= -1
+    if @ajax? and @method is 'app'
+      @scope.user.friends = [] if cursor is -1
+      @ajax.post @api + 'friends', { username : user, cursor : cursor }
+          .success (friends, status, headers, config) =>
+            if friends.ids?.length > 0
+              @.getUserById id, @scope.user.friends for id in friends.ids
+
+              if friends.next_cursor isnt 0
+                @.getFriends user, friends.next_cursor
+              else
+                if @scope.status.progress >= @scope.status.overall
+                  @scope.status.loading.friends = false
+                  @scope.status.loaded.friends = true
+
+            if friends.errors?
+              console.log 'Error: ' + error.code + ' [' + error.message + ']' for error in friends.errors
+    if @ajax? and @method is 'oauth' and @twitter?
+      @twitter.get '/1.1/friends/ids.json?screen_name=' + user + '&cursor=' + cursor
+              .done (friends) =>
+                @timeout () =>
+                  @scope.$apply () =>
+                    if friends.ids?.length > 0
+                      @.getUserById id, @scope.user.friends for id in friends.ids
+
+                      if friends.next_cursor isnt 0
+                        @.getFriends user, friends.next_cursor
+                      else
+                        if @scope.status.progress >= @scope.status.overall
+                          @scope.status.loading.friends = false
+                          @scope.status.loaded.friends = true
+
+                    if friends.errors?
+                      console.log 'Error: ' + error.code + ' [' + error.message + ']' for error in friends.errors
+
 
   getFollowers: (user, cursor) ->
     cursor ?= -1
@@ -111,7 +148,7 @@ class TwitterClientInterface
       @ajax.post @api + 'followers', { username : user, cursor : cursor }
           .success (followers, status, headers, config) =>
             if followers.ids?.length > 0
-              @.getUserById id for id in followers.ids
+              @.getUserById id, @scope.user.followers for id in followers.ids
 
               if followers.next_cursor isnt 0
                 @.getFollowers user, followers.next_cursor
@@ -129,7 +166,7 @@ class TwitterClientInterface
                 @timeout () =>
                   @scope.$apply () =>
                     if followers.ids?.length > 0
-                      @.getUserById id for id in followers.ids
+                      @.getUserById id, @scope.user.followers for id in followers.ids
 
                       if followers.next_cursor isnt 0
                         @.getFollowers user, followers.next_cursor

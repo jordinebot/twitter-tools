@@ -17,9 +17,11 @@ twitterToolsApp.controller 'mainController', ($scope, $http, $timeout, twitterIn
   $scope.status =
     loading:
       user:       false
+      friends:    false
       followers:  false
     loaded:
       user:       false
+      friends:    false
       followers:  false
     progress : 0
     overall  : 100
@@ -34,6 +36,14 @@ twitterToolsApp.controller 'mainController', ($scope, $http, $timeout, twitterIn
       twitterInterface.getFollowers $scope.user.name
     else
       console.log 'Followers info is already being fetched!'
+
+  $scope.getFriends = () ->
+    if not $scope.status.loading.friends
+      $scope.status.loading.friends = true
+      $scope.status.overall = $scope.user.friends_count
+      twitterInterface.getFriends $scope.user.name
+    else
+      console.log 'Friends info is already being fetched!'
 
   nameChanged = (newValue, oldValue, scope) ->
     $scope.status.loaded.user = false
