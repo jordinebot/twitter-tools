@@ -49,6 +49,7 @@ twitterToolsApp.controller('mainController', function($scope, $http, $timeout, t
   };
   $scope.getFollowers = function() {
     if (!$scope.status.loading.followers) {
+      $scope.user.followers = [];
       $scope.status.loading.followers = true;
       $scope.status.overall = $scope.user.followers_count;
       return twitterInterface.getFollowers($scope.user.name);
@@ -58,6 +59,7 @@ twitterToolsApp.controller('mainController', function($scope, $http, $timeout, t
   };
   $scope.getFriends = function() {
     if (!$scope.status.loading.friends) {
+      $scope.user.friends = [];
       $scope.status.loading.friends = true;
       $scope.status.overall = $scope.user.friends_count;
       return twitterInterface.getFriends($scope.user.name);

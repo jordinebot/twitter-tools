@@ -31,6 +31,8 @@ twitterToolsApp.controller 'mainController', ($scope, $http, $timeout, twitterIn
 
   $scope.getFollowers = () ->
     if not $scope.status.loading.followers
+      # Reset some info
+      $scope.user.followers = []
       $scope.status.loading.followers = true
       $scope.status.overall = $scope.user.followers_count
       twitterInterface.getFollowers $scope.user.name
@@ -39,6 +41,7 @@ twitterToolsApp.controller 'mainController', ($scope, $http, $timeout, twitterIn
 
   $scope.getFriends = () ->
     if not $scope.status.loading.friends
+      $scope.user.friends = []
       $scope.status.loading.friends = true
       $scope.status.overall = $scope.user.friends_count
       twitterInterface.getFriends $scope.user.name
